@@ -31,10 +31,17 @@ and the public scan runs against the repository you name. The offer page form
 composes the same request as a pre-filled issue, so no data is collected by the
 page itself.
 
+An issue carrying the `audit-request` label starts the
+[`Free repo health audit`](.github/workflows/audit-request.yml) workflow, which
+runs `repo_audit.py` against the repository named in the issue and posts the
+report plus the ready-to-file issue checklist back as a reply. It is read-only
+and uses only the workflow's built-in token, so no credentials are stored here.
+
 ## Files
 
 - `index.html` — the offer / landing page (single self-contained file)
 - `repo_audit.py` — the audit tool
+- `run_audit_request.py` — resolves a request issue to a repository and runs the audit
 - `sample-report.md` — example report
 - `sample-issues.md` — example ready-to-file issue checklist
 
