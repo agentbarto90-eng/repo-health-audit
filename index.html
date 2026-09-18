@@ -391,6 +391,11 @@
             Nothing is sent from this page, nothing is stored here, and no account details are
             collected. You review the request in GitHub before posting it.
           </p>
+          <label for="audit-type">Which audit?</label>
+          <select id="audit-type" name="audit">
+            <option value="free">Free scan — score and top findings</option>
+            <option value="paid">Full £29 audit — every finding plus fix pack</option>
+          </select>
           <label for="repo-url">Public GitHub repository URL</label>
           <input id="repo-url" name="repo" type="url" placeholder="https://github.com/owner/repo" autocomplete="off" />
           <label for="email">Preferred contact (optional)</label>
@@ -513,9 +518,11 @@
       var repoInput = document.getElementById("repo-url");
       var emailInput = document.getElementById("email");
       var notesInput = document.getElementById("notes");
+      var auditSelect = document.getElementById("audit-type");
       var repo = (repoInput && repoInput.value || "").trim();
       var contact = (emailInput && emailInput.value || "").trim();
       var notes = (notesInput && notesInput.value || "").trim();
+      var paid = !!(auditSelect && auditSelect.value === "paid");
 
       if (!repo) {
         if (status) { status.textContent = "Add the public repository URL first."; }
@@ -523,7 +530,7 @@
         return false;
       }
 
-      var title = "Audit request: " + repo;
+      var title = (paid ? "Full audit request: " : "Audit request: ") + repo;
       var bodyLines = [
         "**Repository:** " + repo,
         "**Contact:** " + (contact || "(reply on GitHub)"),
@@ -531,13 +538,17 @@
         "",
         "Requested via https://agentbarto90-eng.github.io/repo-health-audit/"
       ];
+      // The paid option must land on the paid template so the issue carries the
+      // paid-audit label and the request is counted as paid intent.
       var url = "https://github.com/" + REQUEST_REPO + "/issues/new"
         + "?title=" + encodeURIComponent(title)
         + "&body=" + encodeURIComponent(bodyLines.join("\n"))
-        + "&labels=" + encodeURIComponent("audit-request");
+        + (paid ? "&template=" + encodeURIComponent("full-audit-request.yml")
+                : "&labels=" + encodeURIComponent("audit-request"));
 
       if (status) {
-        status.textContent = "Opening a pre-filled request issue on GitHub…";
+        status.textContent = "Opening a pre-filled " + (paid ? "full £29 audit" : "free scan")
+          + " request issue on GitHub…";
       }
       window.open(url, "_blank", "noopener");
       return false;
