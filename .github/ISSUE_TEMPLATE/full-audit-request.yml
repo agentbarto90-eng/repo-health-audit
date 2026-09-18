@@ -1,6 +1,7 @@
 name: Full audit request (£29)
 description: Ask for the full prioritised report and fix pack for a public GitHub repository
 title: "Full audit request: <owner>/<repo>"
+labels: ["paid-audit"]
 body:
   - type: markdown
     attributes:
