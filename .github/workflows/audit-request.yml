@@ -50,17 +50,13 @@ jobs:
         if: steps.scan.outputs.ok == 'true'
         run: |
           {
-            echo "Thanks — here is the read-only health scan of \`${{ steps.scan.outputs.repo }}\`."
+            echo "Thanks — here is the free read-only health scan of \`${{ steps.scan.outputs.repo }}\`."
             echo ""
             cat report.md
             echo ""
-            echo "<details><summary>Ready-to-file issue checklist</summary>"
-            echo ""
-            cat issues.md
-            echo ""
-            echo "</details>"
-            echo ""
             echo "Read-only: no change was made to your repository."
+            echo ""
+            echo "The free scan shows the score, the dimension breakdown and the top finding titles. The full audit writes up every finding, turns each one into a ready-to-file issue draft with labels, and adds a fix pack of files you can review and commit. Reply here or use the offer page if you want the full audit."
           } > reply.md
 
       - name: Post the report back to the issue
@@ -84,6 +80,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: audit-${{ github.run_id }}
-          path: |
-            report.md
-            issues.md
+          path: report.md

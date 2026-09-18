@@ -1,0 +1,39 @@
+name: Full audit request (£29)
+description: Ask for the full prioritised report and fix pack for a public GitHub repository
+title: "Full audit request: <owner>/<repo>"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The full audit is a one-time £29 report: every finding written up in
+        severity order, ready-to-file issue drafts with labels, and a fix pack
+        of files you can review and commit. Payment is taken through the
+        project's Stripe Payment Link on the offer page. Do not paste card
+        details, API keys or anything private here.
+  - type: input
+    id: repository
+    attributes:
+      label: Public repository URL
+      description: Only public repositories can be audited.
+      placeholder: https://github.com/owner/repo
+    validations:
+      required: true
+  - type: input
+    id: contact
+    attributes:
+      label: Contact for delivery and one round of follow-up questions
+      placeholder: "@your-handle or you@example.com"
+    validations:
+      required: false
+  - type: textarea
+    id: focus
+    attributes:
+      label: What should the audit focus on? (optional)
+      placeholder: e.g. CI setup, release process, issue triage
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        Read-only: the audit reads public GitHub data and never writes to your
+        repository. This issue is a request, not a payment.

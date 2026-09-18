@@ -77,7 +77,7 @@ def main():
     print("Auditing %s" % repo)
     result = subprocess.run(
         [sys.executable, "repo_audit.py", repo,
-         "--out", "report.md", "--issues", "issues.md"],
+         "--teaser", "--out", "report.md"],
         text=True, capture_output=True,
     )
     if result.returncode != 0 or not os.path.exists("report.md"):
@@ -88,7 +88,7 @@ def main():
         set_output("repo", repo)
         return 1
 
-    files = [f for f in ("report.md", "issues.md") if os.path.exists(f)]
+    files = [f for f in ("report.md",) if os.path.exists(f)]
     print("Wrote %s" % ", ".join(files))
     set_output("ok", "true")
     set_output("repo", repo)

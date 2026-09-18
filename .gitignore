@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+report.md
+reply.md
+fix-pack.md
+fix-pack.patch
+FIX-PACK.md

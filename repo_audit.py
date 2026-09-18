@@ -814,7 +814,8 @@ def workflow_triggers(data):
     triggers = set()
     for content in data.get("workflow_files", {}).values():
         # Matches both `on: push` and a mapping block `on:\n  push:`
-        for m in re.finditer(r"^\s*on\s*:\s*(.*)$", content, flags=re.M | re.I):
+        # [ \t] (not \s) so the match never crosses a newline into the next key.
+        for m in re.finditer(r"^[ \t]*on[ \t]*:[ \t]*(.*)$", content, flags=re.M | re.I):
             rest = (m.group(1) or "").strip()
             if rest:
                 for tok in re.split(r"[,\[\] ]+", rest):
@@ -822,8 +823,8 @@ def workflow_triggers(data):
                     if tok:
                         triggers.add(tok)
         for m in re.finditer(
-            r"^\s*(push|pull_request_target|pull_request|workflow_dispatch|"
-            r"workflow_call|schedule|release)\s*:",
+            r"^[ \t]*(push|pull_request_target|pull_request|workflow_dispatch|"
+            r"workflow_call|schedule|release)[ \t]*:",
             content,
             flags=re.M,
         ):
@@ -838,6 +839,13 @@ def workflow_triggers(data):
 SEVERITY_ORDER = {"high": 0, "medium": 1, "low": 2}
 SEVERITY_LABEL = {"high": "High", "medium": "Medium", "low": "Low"}
 
+# The free scan is a lead magnet, not the product. It shows the headline score,
+# the dimension breakdown and the titles of the most important findings; the
+# written findings, the ready-to-file issue drafts and the fix pack are the paid
+# deliverable. Keeping this boundary in the tool stops the free channel from
+# giving the £29 report away.
+TEASER_FINDINGS = 3
+
 
 def band(score):
     if score >= 85:
@@ -849,10 +857,13 @@ def band(score):
     return "At risk"
 
 
-def render_report(full_name, data, dimensions, findings, total, generated):
+def render_report(full_name, data, dimensions, findings, total, generated, teaser=False):
     repo = data["repo"]
     out = []
-    out.append("# Repository health audit — `%s`" % full_name)
+    if teaser:
+        out.append("# Free repo health scan — `%s`" % full_name)
+    else:
+        out.append("# Repository health audit — `%s`" % full_name)
     out.append("")
     out.append(
         "**Overall score: %d / 100 — %s**  " % (total, band(total))
@@ -889,26 +900,70 @@ def render_report(full_name, data, dimensions, findings, total, generated):
     out.append("")
     out.append("## Findings (most important first)")
     out.append("")
+    ordered = sorted(findings, key=lambda x: SEVERITY_ORDER.get(x["severity"], 9))
     if not findings:
         out.append("No gaps found by the checks in this audit.")
-    for i, f in enumerate(sorted(findings, key=lambda x: SEVERITY_ORDER.get(x["severity"], 9)), 1):
-        out.append("### %d. [%s] %s" % (i, SEVERITY_LABEL[f["severity"]], f["title"]))
+    if teaser:
+        for i, f in enumerate(ordered[:TEASER_FINDINGS], 1):
+            out.append("%d. **[%s]** %s" % (i, SEVERITY_LABEL[f["severity"]], f["title"]))
+        hidden = len(ordered) - TEASER_FINDINGS
         out.append("")
-        out.append("_Area: %s_" % f["dimension"])
+        if hidden > 0:
+            out.append(
+                "The free scan lists the top %d findings by title only. "
+                "**%d more finding%s**, every finding written up in full, and the "
+                "ready-to-file issue drafts with labels are in the full report."
+                % (TEASER_FINDINGS, hidden, "" if hidden == 1 else "s")
+            )
+        else:
+            out.append(
+                "The free scan lists findings by title only. The full report writes each "
+                "one up and turns it into a ready-to-file issue draft with labels."
+            )
         out.append("")
-        out.append(f["body"])
+        out.append("## Dimension scores")
         out.append("")
-    out.append("## Dimension detail")
-    out.append("")
-    for key, label, weight, score, checks in dimensions:
-        out.append("### %s — %d/100" % (label, score))
+        for key, label, weight, score, checks in dimensions:
+            passed = sum(1 for c in checks if c[1] == "pass")
+            out.append(
+                "- **%s**: %d/100 (%d%% weight, %d/%d checks pass)"
+                % (label, score, weight, passed, len(checks))
+            )
         out.append("")
-        out.append("| Check | Result | Detail | Points |")
-        out.append("|---|---|---|---|")
-        for cname, cstatus, cdetail, cpoints, cmax in checks:
-            icon = {"pass": "pass", "warn": "warn", "fail": "fail", "unknown": "n/a"}[cstatus]
-            out.append("| %s | %s | %s | %d/%d |" % (cname, icon, cdetail, cpoints, cmax))
+        out.append(
+            "The full report includes the per-check detail behind each score, the written "
+            "fix for every finding, and a ready-to-commit fix pack."
+        )
         out.append("")
+        out.append("---")
+        out.append("")
+        out.append(
+            "**Want the full audit?** The £29 report adds every finding written up, the "
+            "ready-to-file issue drafts with suggested labels, and a fix pack of files you "
+            "can review and commit. Open a full audit request at "
+            "https://github.com/agentbarto90-eng/repo-health-audit/issues/new "
+            "or use the offer page."
+        )
+        out.append("")
+    else:
+        for i, f in enumerate(ordered, 1):
+            out.append("### %d. [%s] %s" % (i, SEVERITY_LABEL[f["severity"]], f["title"]))
+            out.append("")
+            out.append("_Area: %s_" % f["dimension"])
+            out.append("")
+            out.append(f["body"])
+            out.append("")
+        out.append("## Dimension detail")
+        out.append("")
+        for key, label, weight, score, checks in dimensions:
+            out.append("### %s — %d/100" % (label, score))
+            out.append("")
+            out.append("| Check | Result | Detail | Points |")
+            out.append("|---|---|---|---|")
+            for cname, cstatus, cdetail, cpoints, cmax in checks:
+                icon = {"pass": "pass", "warn": "warn", "fail": "fail", "unknown": "n/a"}[cstatus]
+                out.append("| %s | %s | %s | %d/%d |" % (cname, icon, cdetail, cpoints, cmax))
+            out.append("")
     out.append("## Method")
     out.append("")
     out.append(
@@ -972,7 +1027,18 @@ def main(argv=None):
     ap.add_argument("repo", help="owner/name of a public GitHub repository")
     ap.add_argument("--out", help="write the Markdown report here")
     ap.add_argument("--issues", help="write the issue checklist here")
+    ap.add_argument(
+        "--teaser",
+        action="store_true",
+        help="write the free scan instead of the full report (score, dimension "
+        "breakdown and finding titles only); no issue checklist is written",
+    )
     ap.add_argument("--json", action="store_true", help="print a JSON summary")
+    ap.add_argument(
+        "--dump-json",
+        help="write the full collected audit data as JSON (consumed by "
+        "fix_pack.py --from-json)",
+    )
     args = ap.parse_args(argv)
 
     if "/" not in args.repo:
@@ -983,7 +1049,9 @@ def main(argv=None):
     dimensions, findings, total = analyse(data)
     generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
-    report = render_report(args.repo, data, dimensions, findings, total, generated)
+    report = render_report(
+        args.repo, data, dimensions, findings, total, generated, teaser=args.teaser
+    )
     issues = render_issues(args.repo, findings)
 
     if args.json:
@@ -1008,9 +1076,20 @@ def main(argv=None):
             fh.write(report + "\n")
         print("\n[report written to %s]" % args.out, file=sys.stderr)
     if args.issues:
-        with open(args.issues, "w", encoding="utf-8") as fh:
-            fh.write(issues + "\n")
-        print("[issue checklist written to %s]" % args.issues, file=sys.stderr)
+        if args.teaser:
+            print(
+                "[--teaser set: skipping the issue checklist, which is part of the "
+                "paid report]",
+                file=sys.stderr,
+            )
+        else:
+            with open(args.issues, "w", encoding="utf-8") as fh:
+                fh.write(issues + "\n")
+            print("[issue checklist written to %s]" % args.issues, file=sys.stderr)
+    if args.dump_json:
+        with open(args.dump_json, "w", encoding="utf-8") as fh:
+            json.dump(data, fh)
+        print("[audit data written to %s]" % args.dump_json, file=sys.stderr)
     return 0
 
 
