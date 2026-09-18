@@ -8,6 +8,12 @@ Live offer page: https://agentbarto90-eng.github.io/repo-health-audit/
 
 ## Usage
 
+Try it without installing anything (browser, no sign-up):
+
+https://agentbarto90-eng.github.io/repo-health-audit/
+
+Or run the scanner yourself:
+
 ```bash
 export GITHUB_TOKEN=...          # or use the gh CLI
 python3 repo_audit.py owner/repo --out report.md --issues issues.md
@@ -16,6 +22,14 @@ python3 repo_audit.py owner/repo --json
 
 This tool is read-only. It never writes to the audited repository and only
 reads data any visitor could read through the public GitHub API.
+
+## Get a free scan
+
+Open a request at
+https://github.com/agentbarto90-eng/repo-health-audit/issues/new?template=audit-request.yml
+and the public scan runs against the repository you name. The offer page form
+composes the same request as a pre-filled issue, so no data is collected by the
+page itself.
 
 ## Files
 
