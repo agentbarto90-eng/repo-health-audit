@@ -9,6 +9,7 @@ network, so they run anywhere and do not need a GitHub token.
 
 import unittest
 
+import audit_reply as ar
 import repo_audit as ra
 import run_audit_request as rar
 
@@ -228,6 +229,40 @@ class TestRequestResolver(unittest.TestCase):
         finally:
             os.environ.clear()
             os.environ.update(old)
+
+
+class TestAuditReplyGuard(unittest.TestCase):
+    """The free-audit reply must be posted at most once per request."""
+
+    def test_no_comments_needs_both(self):
+        out = ar.guard([])
+        self.assertIn("needs_report=true", out)
+        self.assertIn("needs_failure=true", out)
+
+    def test_report_already_posted_skips_report(self):
+        out = ar.guard([{"body": "unrelated"}, {"body": ar.build_reply("o/r", "x")}])
+        self.assertIn("needs_report=false", out)
+        self.assertIn("needs_failure=true", out)
+
+    def test_failure_already_explained(self):
+        out = ar.guard([ar.failure_reply()])
+        self.assertIn("needs_report=true", out)
+        self.assertIn("needs_failure=false", out)
+
+    def test_markers_stay_in_sync_with_the_replies(self):
+        # Guard and replies share sentinels, so the guard cannot silently stop
+        # matching the text the workflow actually posts.
+        self.assertIn(ar.REPORT_MARKER, ar.build_reply("o/r", "body"))
+        self.assertIn(ar.FAILURE_MARKER, ar.failure_reply())
+
+    def test_build_reply_contains_repo_and_text(self):
+        out = ar.build_reply("o/r", "# Report\nscore 16")
+        self.assertIn("`o/r`", out)
+        self.assertIn("score 16", out)
+
+    def test_null_bodies_are_tolerated(self):
+        out = ar.guard([None, {"body": None}])
+        self.assertIn("needs_report=true", out)
 
 
 if __name__ == "__main__":
