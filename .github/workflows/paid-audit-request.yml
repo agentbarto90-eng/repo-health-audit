@@ -22,7 +22,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          gh issue comment "$ISSUE_NUMBER" --body \
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
             "Thanks for asking about the full £29 audit. It covers every finding written up in severity order, ready-to-file issue drafts with labels, and a fix pack you can review and commit.
           Next step: payment is not automated yet, so this issue is the record of your request. A real Stripe Payment Link is being wired up; when it is live, the pay button on the offer page and this issue will both point at it. Nothing is charged here and no card details are needed.
           Read-only: the audit reads public GitHub data and never writes to your repository."
