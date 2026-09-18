@@ -7,6 +7,7 @@ These cover the pure logic and the free/paid boundary. They never touch the
 network, so they run anywhere and do not need a GitHub token.
 """
 
+import os
 import unittest
 
 import audit_reply as ar
@@ -263,6 +264,56 @@ class TestAuditReplyGuard(unittest.TestCase):
     def test_null_bodies_are_tolerated(self):
         out = ar.guard([None, {"body": None}])
         self.assertIn("needs_report=true", out)
+
+
+
+class TestAuditWorkflowFailurePath(unittest.TestCase):
+    """A malformed request must still get an explanation.
+
+    `run_audit_request.py` exits non-zero when it cannot resolve a repository.
+    GitHub skips any step whose `if` condition is false and, by default, aborts
+    the job once a step fails -- which silently dropped the failure reply. Keep
+    the workflow shaped so the failure step is always reachable.
+    """
+
+    WORKFLOW = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        ".github", "workflows", "audit-request.yml")
+
+    @classmethod
+    def setUpClass(cls):
+        try:
+            import yaml
+        except ImportError:  # pragma: no cover - optional test dependency
+            raise unittest.SkipTest("PyYAML is not installed")
+        with open(cls.WORKFLOW, encoding="utf-8") as fh:
+            cls.doc = yaml.safe_load(fh)
+        cls.steps = cls.doc["jobs"]["audit"]["steps"]
+
+    def _step(self, name):
+        for step in self.steps:
+            if step.get("name") == name:
+                return step
+        return None
+
+    def test_scan_step_does_not_abort_the_job(self):
+        scan = self._step("Resolve the requested repository and run the audit")
+        self.assertIsNotNone(scan)
+        self.assertIs(scan.get("continue-on-error"), True,
+                      "scan exits non-zero on a bad request; without "
+                      "continue-on-error the failure reply is skipped")
+
+    def test_failure_step_exists_and_is_guarded_by_the_scan_output(self):
+        step = self._step("Explain a failed request")
+        self.assertIsNotNone(step, "no step posts the failure reply")
+        cond = step.get("if", "")
+        self.assertIn("steps.scan.outputs.ok != 'true'", cond)
+        self.assertIn("steps.guard.outputs.needs_failure == 'true'", cond)
+
+    def test_scan_records_ok_before_any_conditional_step(self):
+        names = [s.get("name") for s in self.steps]
+        self.assertLess(names.index("Resolve the requested repository and run the audit"),
+                        names.index("Explain a failed request"))
 
 
 if __name__ == "__main__":
