@@ -50,6 +50,11 @@ jobs:
 
       - name: Resolve the requested repository and run the audit
         id: scan
+        # A request with no usable repository exits non-zero, which would fail
+        # the job and skip every later step (including the "explain a failed
+        # request" step). The failure is handled explicitly below, so let the
+        # job continue and decide from the `ok` output.
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DISPATCH_REPO: ${{ inputs.repository }}
