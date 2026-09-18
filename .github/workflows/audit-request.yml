@@ -1,0 +1,89 @@
+name: Free repo health audit
+
+# Fulfils the promise on the offer page: an issue labelled `audit-request`
+# (which the request template applies automatically) triggers a read-only scan,
+# and the report plus the ready-to-file issue checklist are posted back to the
+# issue. Runs entirely on public GitHub data and the built-in GITHUB_TOKEN.
+
+on:
+  issues:
+    types: [opened, labeled, edited]
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: "Public repository to audit (owner/name)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: audit-request-${{ github.event.issue.number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.issue.labels.*.name, 'audit-request')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Resolve the requested repository and run the audit
+        id: scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISPATCH_REPO: ${{ inputs.repository }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: python3 run_audit_request.py
+
+      - name: Build the reply
+        id: reply
+        if: steps.scan.outputs.ok == 'true'
+        run: |
+          {
+            echo "Thanks — here is the read-only health scan of \`${{ steps.scan.outputs.repo }}\`."
+            echo ""
+            cat report.md
+            echo ""
+            echo "<details><summary>Ready-to-file issue checklist</summary>"
+            echo ""
+            cat issues.md
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "Read-only: no change was made to your repository."
+          } > reply.md
+
+      - name: Post the report back to the issue
+        if: steps.scan.outputs.ok == 'true' && github.event_name != 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: gh issue comment "$ISSUE_NUMBER" --body-file reply.md
+
+      - name: Explain a failed request
+        if: steps.scan.outputs.ok != 'true' && github.event_name != 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --body \
+            "I could not find a public \`owner/name\` repository in this request. Please include a public repository URL such as \`https://github.com/owner/repo\` and I will re-run the scan."
+
+      - name: Upload the report as an artifact
+        if: steps.scan.outputs.ok == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-${{ github.run_id }}
+          path: |
+            report.md
+            issues.md
