@@ -161,6 +161,9 @@ class TestTeaserBoundary(unittest.TestCase):
         t = self.teaser()
         self.assertIn("Want the full audit", t)
         self.assertIn("£29", t)
+        # The CTA must land on the paid template, not the generic chooser, so a
+        # reader who acts is counted as paid intent.
+        self.assertIn("template=full-audit-request.yml", t)
 
     def test_teaser_leaks_no_written_findings(self):
         t = self.teaser()

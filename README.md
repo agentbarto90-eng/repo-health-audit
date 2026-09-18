@@ -50,10 +50,12 @@ runs `repo_audit.py --teaser` against the repository named in the issue and
 posts the free scan back as a reply. It is read-only and uses only the
 workflow's built-in token, so no credentials are stored here.
 
-For the full £29 report, open an issue at
-https://github.com/agentbarto90-eng/repo-health-audit/issues/new
-and say you want the full audit. It is delivered as a written report plus the
-fix pack.
+For the full £29 report, open a full audit request at
+https://github.com/agentbarto90-eng/repo-health-audit/issues/new?template=full-audit-request.yml
+It is delivered as a written report plus the fix pack. The request is labelled
+`paid-audit`, which is how paid intent is counted. Payment is not automated
+yet: the paid CTA on the offer page stays disabled until a real Stripe Payment
+Link is in place, and nothing is charged through this repository.
 
 ## Files
 
