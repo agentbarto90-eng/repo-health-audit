@@ -386,18 +386,22 @@
       <div class="cta" style="margin-top:22px">
         <form class="form card" id="request-form" novalidate>
           <p class="notice" id="placeholder-note">
-            Placeholder form. It does not send anything: there is no endpoint behind it yet.
-            Submitting is disabled on purpose. Contact details will be wired up before the offer
-            goes live.
+            This form opens a pre-filled request issue on the project's public GitHub tracker.
+            Nothing is sent from this page, nothing is stored here, and no account details are
+            collected. You review the request in GitHub before posting it.
           </p>
           <label for="repo-url">Public GitHub repository URL</label>
           <input id="repo-url" name="repo" type="url" placeholder="https://github.com/owner/repo" autocomplete="off" />
-          <label for="email">Email (for the report)</label>
-          <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" />
+          <label for="email">Preferred contact (optional)</label>
+          <input id="email" name="email" type="text" placeholder="GitHub handle or email" autocomplete="off" />
           <label for="notes">Anything specific you want covered? (optional)</label>
           <textarea id="notes" name="notes" rows="3" placeholder="e.g. focus on CI and release process"></textarea>
-          <button class="btn" type="submit" aria-describedby="placeholder-note">Send request</button>
+          <button class="btn" type="submit" aria-describedby="placeholder-note">Open request issue</button>
           <p class="status" id="form-status" role="status" aria-live="polite"></p>
+          <p class="micro">
+            Prefer not to use the form? Open a request directly at
+            <a id="request-link" href="https://github.com/agentbarto90-eng/repo-health-audit/issues/new">the request tracker</a>.
+          </p>
         </form>
 
         <aside class="card">
@@ -457,8 +461,8 @@
   <div class="wrap">
     <p>
       <strong>Flowline</strong> — repo health audits for open-source maintainers.
-      This page is a demand test. The request form and payment button are deliberately inert
-      placeholders; no data is collected and no payment can be made.
+      The free scan runs against public GitHub data only. Requests are handled through the
+      public issue tracker; no cookies, no analytics, no third-party requests.
     </p>
     <p>
       No cookies, no analytics, no third-party requests. If you email in, your details are used
@@ -495,16 +499,44 @@
     });
   }
 
-  // Placeholder form: never sends, never stores.
+  // Lead channel: the form composes a pre-filled issue on the project's public
+  // tracker. Nothing is transmitted from this page, and no data is stored here.
+  var REQUEST_REPO = "agentbarto90-eng/repo-health-audit";
   var form = document.getElementById("request-form");
   var status = document.getElementById("form-status");
   if (form) {
     form.addEventListener("submit", function (event) {
       event.preventDefault();
-      if (status) {
-        status.textContent =
-          "Nothing was sent — this form is a placeholder with no endpoint behind it.";
+      var repoInput = document.getElementById("repo-url");
+      var emailInput = document.getElementById("email");
+      var notesInput = document.getElementById("notes");
+      var repo = (repoInput && repoInput.value || "").trim();
+      var contact = (emailInput && emailInput.value || "").trim();
+      var notes = (notesInput && notesInput.value || "").trim();
+
+      if (!repo) {
+        if (status) { status.textContent = "Add the public repository URL first."; }
+        if (repoInput) { repoInput.focus(); }
+        return false;
       }
+
+      var title = "Audit request: " + repo;
+      var bodyLines = [
+        "**Repository:** " + repo,
+        "**Contact:** " + (contact || "(reply on GitHub)"),
+        "**Notes:** " + (notes || "(none)"),
+        "",
+        "Requested via https://agentbarto90-eng.github.io/repo-health-audit/"
+      ];
+      var url = "https://github.com/" + REQUEST_REPO + "/issues/new"
+        + "?title=" + encodeURIComponent(title)
+        + "&body=" + encodeURIComponent(bodyLines.join("\n"))
+        + "&labels=" + encodeURIComponent("audit-request");
+
+      if (status) {
+        status.textContent = "Opening a pre-filled request issue on GitHub…";
+      }
+      window.open(url, "_blank", "noopener");
       return false;
     });
   }
