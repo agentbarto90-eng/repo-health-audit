@@ -941,7 +941,8 @@ def render_report(full_name, data, dimensions, findings, total, generated, tease
             "**Want the full audit?** The £29 report adds every finding written up, the "
             "ready-to-file issue drafts with suggested labels, and a fix pack of files you "
             "can review and commit. Open a full audit request at "
-            "https://github.com/agentbarto90-eng/repo-health-audit/issues/new "
+            "https://github.com/agentbarto90-eng/repo-health-audit/issues/new"
+            "?template=full-audit-request.yml "
             "or use the offer page."
         )
         out.append("")
