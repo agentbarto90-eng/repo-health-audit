@@ -424,12 +424,12 @@
           <p class="muted">Payment is taken through a Stripe Payment Link — a public, shareable URL. No card details ever touch this site.</p>
           <div class="pay-slot">
             <button class="btn" type="button" id="pay-btn" aria-disabled="true" disabled>Pay £29</button>
-            <code id="stripe-slot">https://buy.stripe.com/PASTE_YOUR_PAYMENT_LINK_HERE</code>
+            <code id="stripe-slot">https://buy.stripe.com/8x2bJ30KJ906azjfcAcEw00</code>
           </div>
           <p class="notice" id="pay-note" style="margin-top:14px">
-            Payment link placeholder — the button stays disabled until a real
-            <code>buy.stripe.com</code> link is pasted in. Only the public payment link belongs
-            here; no secret API key.
+            Secure one-time checkout through Stripe. After payment, return here to submit the
+            public repository URL for your full audit. Payment is verified through Stripe before
+            any order is counted.
           </p>
           <h3 style="margin-top:22px">Good to know</h3>
           <ul class="muted" style="font-size:14.5px; padding-left:18px; margin:0">
@@ -494,10 +494,8 @@
 (function () {
   "use strict";
 
-  // Payment links are placeholders. Paste a real public buy.stripe.com URL to
-  // activate a plan; the button stays inert while the value is a placeholder.
   var PAYMENT_LINKS = {
-    report: "https://buy.stripe.com/PASTE_YOUR_PAYMENT_LINK_HERE"
+    report: "https://buy.stripe.com/8x2bJ30KJ906azjfcAcEw00"
   };
 
   var payBtn = document.getElementById("pay-btn");
@@ -518,6 +516,9 @@
   // tracker. Nothing is transmitted from this page, and no data is stored here.
   var REQUEST_REPO = "agentbarto90-eng/repo-health-audit";
   var campaignParams = new URLSearchParams(window.location.search);
+  var checkoutSession = campaignParams.get("session_id") || "";
+  var returnedFromPayment = campaignParams.get("payment") === "success"
+    && /^cs_live_[A-Za-z0-9_]+$/.test(checkoutSession);
   var campaignSource = campaignParams.get("utm_source") === "devto"
     && campaignParams.get("utm_campaign") === "experiment1"
     ? "dev.to / experiment1" : "direct / unclassified";
@@ -528,6 +529,11 @@
   }
   var form = document.getElementById("request-form");
   var status = document.getElementById("form-status");
+  if (returnedFromPayment && status) {
+    status.textContent = "Stripe checkout returned successfully. Add the repository URL and open the full audit request. Payment will be verified server-side before the order is counted.";
+    var auditType = document.getElementById("audit-type");
+    if (auditType) { auditType.value = "paid"; }
+  }
   if (form) {
     form.addEventListener("submit", function (event) {
       event.preventDefault();
@@ -552,6 +558,7 @@
         "**Contact:** " + (contact || "(reply on GitHub)"),
         "**Notes:** " + (notes || "(none)"),
         "**Source:** " + campaignSource,
+        "**Stripe Checkout Session:** " + (returnedFromPayment ? checkoutSession : "(not supplied)"),
         "",
         "Requested via https://agentbarto90-eng.github.io/repo-health-audit/"
       ];
