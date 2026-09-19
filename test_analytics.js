@@ -57,4 +57,8 @@ if (run({webdriver: true}).length !== 0) {
 if (run({siteCode: ""}).length !== 0) {
   throw new Error("inactive configuration emitted events");
 }
+sent = run({search: "?analytics_test=record"});
+if (sent.map(x => x.path).join(",") !== "__analytics_test_free_scan,__analytics_test_stripe,__analytics_test_free_scan,__analytics_test_stripe") {
+  throw new Error("verification events were not isolated under test paths");
+}
 console.log("analytics event tests passed");
