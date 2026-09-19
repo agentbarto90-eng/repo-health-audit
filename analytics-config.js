@@ -1,6 +1,6 @@
 // Public configuration only. GoatCounter site codes are not secrets.
-// Leave blank until the operator creates the approved free analytics site.
+// GoatCounter is cookieless; the protected read token is never sent to browsers.
 window.REPO_HEALTH_ANALYTICS = {
   provider: "goatcounter",
-  siteCode: ""
+  siteCode: "repo-health-audit"
 };
