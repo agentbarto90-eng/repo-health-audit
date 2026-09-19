@@ -365,7 +365,7 @@
             <li>Top finding titles by severity (titles only)</li>
             <li>Read-only, nothing installed</li>
           </ul>
-          <a class="btn ghost" href="https://github.com/agentbarto90-eng/repo-health-audit/issues/new?template=audit-request.yml">Request the free scan</a>
+          <a class="btn ghost" id="free-scan-link" href="https://github.com/agentbarto90-eng/repo-health-audit/issues/new?template=audit-request.yml">Request the free scan</a>
         </article>
 
         <article class="card plan featured">
@@ -517,6 +517,15 @@
   // Lead channel: the form composes a pre-filled issue on the project's public
   // tracker. Nothing is transmitted from this page, and no data is stored here.
   var REQUEST_REPO = "agentbarto90-eng/repo-health-audit";
+  var campaignParams = new URLSearchParams(window.location.search);
+  var campaignSource = campaignParams.get("utm_source") === "devto"
+    && campaignParams.get("utm_campaign") === "experiment1"
+    ? "dev.to / experiment1" : "direct / unclassified";
+  var freeScanLink = document.getElementById("free-scan-link");
+  if (freeScanLink && campaignSource === "dev.to / experiment1") {
+    freeScanLink.href = "https://github.com/" + REQUEST_REPO
+      + "/issues/new?template=audit-request-devto.yml";
+  }
   var form = document.getElementById("request-form");
   var status = document.getElementById("form-status");
   if (form) {
@@ -542,6 +551,7 @@
         "**Repository:** " + repo,
         "**Contact:** " + (contact || "(reply on GitHub)"),
         "**Notes:** " + (notes || "(none)"),
+        "**Source:** " + campaignSource,
         "",
         "Requested via https://agentbarto90-eng.github.io/repo-health-audit/"
       ];
