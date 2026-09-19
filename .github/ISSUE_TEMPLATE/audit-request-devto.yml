@@ -1,0 +1,41 @@
+name: Repo health audit request (Dev.to experiment 1)
+description: Ask for a free read-only health scan after reading the Dev.to article
+title: "Audit request: <owner>/<repo>"
+labels: ["audit-request"]
+body:
+  - type: dropdown
+    id: source
+    attributes:
+      label: Source
+      description: Fixed campaign attribution for this request flow.
+      options:
+        - dev.to / experiment1
+    validations:
+      required: true
+  - type: input
+    id: repository
+    attributes:
+      label: Public repository URL
+      description: Only public repositories can be scanned.
+      placeholder: https://github.com/owner/repo
+    validations:
+      required: true
+  - type: input
+    id: contact
+    attributes:
+      label: Preferred contact (optional)
+      description: A GitHub handle is enough; the report can be delivered as a reply here.
+      placeholder: "@your-handle"
+    validations:
+      required: false
+  - type: textarea
+    id: focus
+    attributes:
+      label: What should the scan focus on? (optional)
+      placeholder: e.g. CI setup, release process, issue triage
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        The free scan reads public GitHub data only and makes no change to your repository.
