@@ -365,7 +365,7 @@
             <li>Top finding titles by severity (titles only)</li>
             <li>Read-only, nothing installed</li>
           </ul>
-          <a class="btn ghost" id="free-scan-link" href="https://github.com/agentbarto90-eng/repo-health-audit/issues/new?template=audit-request.yml">Request the free scan</a>
+          <a class="btn ghost" id="free-scan-link" data-analytics-event="cta-free-scan" data-analytics-title="Free scan CTA" href="https://github.com/agentbarto90-eng/repo-health-audit/issues/new?template=audit-request.yml">Request the free scan</a>
         </article>
 
         <article class="card plan featured">
@@ -423,7 +423,7 @@
           <h3>Payment</h3>
           <p class="muted">Payment is taken through a Stripe Payment Link — a public, shareable URL. No card details ever touch this site.</p>
           <div class="pay-slot">
-            <button class="btn" type="button" id="pay-btn" aria-disabled="true" disabled>Pay £29</button>
+            <button class="btn" type="button" id="pay-btn" data-analytics-event="cta-stripe" data-analytics-title="Stripe £29 CTA" aria-disabled="true" disabled>Pay £29</button>
             <code id="stripe-slot">https://buy.stripe.com/8x2bJ30KJ906azjfcAcEw00</code>
           </div>
           <p class="notice" id="pay-note" style="margin-top:14px">
@@ -490,6 +490,8 @@
   </div>
 </footer>
 
+<script src="analytics-config.js"></script>
+<script src="analytics.js"></script>
 <script>
 (function () {
   "use strict";
@@ -550,6 +552,11 @@
         if (status) { status.textContent = "Add the public repository URL first."; }
         if (repoInput) { repoInput.focus(); }
         return false;
+      }
+
+      if (typeof window.repoHealthTrack === "function") {
+        window.repoHealthTrack(paid ? "cta-paid-request" : "cta-free-scan",
+                               paid ? "Paid audit request form" : "Free scan request form");
       }
 
       var title = (paid ? "Full audit request: " : "Audit request: ") + repo;
