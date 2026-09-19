@@ -521,13 +521,20 @@
   var checkoutSession = campaignParams.get("session_id") || "";
   var returnedFromPayment = campaignParams.get("payment") === "success"
     && /^cs_live_[A-Za-z0-9_]+$/.test(checkoutSession);
+  var campaignName = campaignParams.get("utm_campaign");
   var campaignSource = campaignParams.get("utm_source") === "devto"
-    && campaignParams.get("utm_campaign") === "experiment1"
-    ? "dev.to / experiment1" : "direct / unclassified";
+    && campaignName === "experiment1" ? "dev.to / experiment1"
+    : campaignParams.get("utm_source") === "reddit"
+      && campaignName === "experiment1" ? "reddit / experiment1"
+      : "direct / unclassified";
   var freeScanLink = document.getElementById("free-scan-link");
   if (freeScanLink && campaignSource === "dev.to / experiment1") {
     freeScanLink.href = "https://github.com/" + REQUEST_REPO
       + "/issues/new?template=audit-request-devto.yml";
+  }
+  if (freeScanLink && campaignSource === "reddit / experiment1") {
+    freeScanLink.href = "https://github.com/" + REQUEST_REPO
+      + "/issues/new?template=audit-request-reddit.yml";
   }
   var form = document.getElementById("request-form");
   var status = document.getElementById("form-status");

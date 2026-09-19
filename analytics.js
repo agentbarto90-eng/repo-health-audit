@@ -10,8 +10,19 @@
   var ready = false;
   var queue = [];
 
+  function attributedName(name) {
+    var source = (params.get("utm_source") || "").toLowerCase();
+    var campaign = (params.get("utm_campaign") || "").toLowerCase();
+    if (!verification && campaign === "experiment1" &&
+        (source === "reddit" || source === "devto")) {
+      return name + "-" + source + "-experiment1";
+    }
+    return name;
+  }
+
   function send(name, title) {
     if (excluded || !validCode) { return false; }
+    name = attributedName(name);
     if (verification && name.indexOf("__analytics_test_") !== 0) {
       name = "__analytics_test_" + name.replace(/^cta-/, "").replace(/-/g, "_");
       title = "Analytics verification only: " + title;

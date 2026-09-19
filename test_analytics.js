@@ -48,6 +48,14 @@ let sent = run();
 if (sent.map(x => x.path).join(",") !== "cta-free-scan,cta-stripe") {
   throw new Error("CTA events were not emitted correctly");
 }
+sent = run({search: "?utm_source=reddit&utm_medium=community&utm_campaign=experiment1"});
+if (sent.map(x => x.path).join(",") !== "cta-free-scan-reddit-experiment1,cta-stripe-reddit-experiment1") {
+  throw new Error("Reddit campaign events were not separated");
+}
+sent = run({search: "?utm_source=devto&utm_medium=article&utm_campaign=experiment1"});
+if (sent.map(x => x.path).join(",") !== "cta-free-scan-devto-experiment1,cta-stripe-devto-experiment1") {
+  throw new Error("Dev.to campaign events were not separated");
+}
 if (run({search: "?analytics_test=1"}).length !== 0) {
   throw new Error("operator/test exclusion failed");
 }
