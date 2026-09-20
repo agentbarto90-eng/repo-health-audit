@@ -17,6 +17,10 @@
         (source === "reddit" || source === "devto")) {
       return name + "-" + source + "-experiment1";
     }
+    if (!verification && source === "youtube" &&
+        campaign === "repo-maintenance-basics-1") {
+      return name + "-youtube-repo-maintenance-basics-1";
+    }
     return name;
   }
 

@@ -56,6 +56,10 @@ sent = run({search: "?utm_source=devto&utm_medium=article&utm_campaign=experimen
 if (sent.map(x => x.path).join(",") !== "cta-free-scan-devto-experiment1,cta-stripe-devto-experiment1") {
   throw new Error("Dev.to campaign events were not separated");
 }
+sent = run({search: "?utm_source=youtube&utm_medium=content&utm_campaign=repo-maintenance-basics-1"});
+if (sent.map(x => x.path).join(",") !== "cta-free-scan-youtube-repo-maintenance-basics-1,cta-stripe-youtube-repo-maintenance-basics-1") {
+  throw new Error("YouTube campaign events were not separated");
+}
 if (run({search: "?analytics_test=1"}).length !== 0) {
   throw new Error("operator/test exclusion failed");
 }

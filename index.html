@@ -526,7 +526,10 @@
     && campaignName === "experiment1" ? "dev.to / experiment1"
     : campaignParams.get("utm_source") === "reddit"
       && campaignName === "experiment1" ? "reddit / experiment1"
-      : "direct / unclassified";
+      : campaignParams.get("utm_source") === "youtube"
+        && campaignName === "repo-maintenance-basics-1"
+        ? "youtube / repo-maintenance-basics-1"
+        : "direct / unclassified";
   var freeScanLink = document.getElementById("free-scan-link");
   if (freeScanLink && campaignSource === "dev.to / experiment1") {
     freeScanLink.href = "https://github.com/" + REQUEST_REPO
@@ -535,6 +538,10 @@
   if (freeScanLink && campaignSource === "reddit / experiment1") {
     freeScanLink.href = "https://github.com/" + REQUEST_REPO
       + "/issues/new?template=audit-request-reddit.yml";
+  }
+  if (freeScanLink && campaignSource === "youtube / repo-maintenance-basics-1") {
+    freeScanLink.href = "https://github.com/" + REQUEST_REPO
+      + "/issues/new?template=audit-request-youtube.yml";
   }
   var form = document.getElementById("request-form");
   var status = document.getElementById("form-status");
